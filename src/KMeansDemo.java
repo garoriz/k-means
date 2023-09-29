@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,18 +27,31 @@ class KMeans {
     }
 
     private List<Point> initializeCentroids() {
+        Point pointCntr = new Point(0.0, 0.0);
+        for (Point datum : data) {
+            pointCntr.x += datum.x;
+            pointCntr.y += datum.y;
+        }
+        pointCntr.x /= data.size();
+        pointCntr.y /= data.size();
+        double R = 0;
+        for (Point datum : data) {
+            double d = distance(datum, pointCntr);
+            if (d > R) {
+                R = d;
+            }
+        }
         List<Point> initialCentroids = new ArrayList<>();
-        Random random = new Random();
 
         for (int i = 0; i < k; i++) {
-            Point randomPoint = data.get(random.nextInt(data.size()));
-            initialCentroids.add(new Point(randomPoint.x, randomPoint.y));
+            initialCentroids.add(new Point(R * Math.cos(2 * Math.PI * i / k) + pointCntr.x,
+                    R * Math.sin(2 * Math.PI * i / k) + pointCntr.y));
         }
 
         return initialCentroids;
     }
 
-    private double euclideanDistance(Point point1, Point point2) {
+    private double distance(Point point1, Point point2) {
         double dx = point1.x - point2.x;
         double dy = point1.y - point2.y;
         return Math.sqrt(dx * dx + dy * dy);
@@ -51,7 +62,7 @@ class KMeans {
         double minDistance = Double.MAX_VALUE;
 
         for (int i = 0; i < centroids.size(); i++) {
-            double distance = euclideanDistance(point, centroids.get(i));
+            double distance = distance(point, centroids.get(i));
             if (distance < minDistance) {
                 minDistance = distance;
                 closestCentroidIdx = i;
@@ -166,7 +177,7 @@ class ClusterPlot extends JPanel {
 
 public class KMeansDemo {
     public static void main(String[] args) {
-        // Генерируем случайные данные для примера
+        // Генерация случайных данных для примера
         List<Point> data = new ArrayList<>();
         Random random = new Random();
 
@@ -176,17 +187,17 @@ public class KMeansDemo {
             data.add(new Point(x, y));
         }
 
-        // Находим оптимальное количество кластеров с помощью метода "локтя"
+        // Нахождение оптимального количества кластеров
         int maxK = 10;
         int optimalK = findOptimalK(data, maxK);
         System.out.println("Оптимальное количество кластеров: " + optimalK);
 
-        // Выполняем кластеризацию с оптимальным количеством кластеров
+        // Выполнение кластеризации с оптимальным количеством кластеров
         KMeans kMeans = new KMeans(data, optimalK);
         List<Point> centroids = kMeans.run(100);
         List<List<Point>> clusters = kMeans.getClusters();
 
-        // Создаем графическое окно для отрисовки кластеров
+        // Создание графического окна для отрисовки кластеров
         JFrame frame = new JFrame("K-Means Clustering");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         ClusterPlot clusterPlot = new ClusterPlot(data, centroids, clusters);
@@ -200,29 +211,29 @@ public class KMeansDemo {
 
         for (int k = 1; k <= maxK; k++) {
             KMeans kMeans = new KMeans(data, k);
-            kMeans.run(100);
             List<Point> centroids = kMeans.run(100);
             List<List<Point>> clusters = kMeans.getClusters();
-            double wcss = calculateWCSS(data, centroids, clusters);
+            double wcss = calculateWCSS(centroids, clusters);
             wcssValues.add(wcss);
         }
 
-        // Находим оптимальное количество кластеров с помощью метода "локтя"
+        // Нахождение оптимального количества кластеров
         int optimalK = 1;
         double minDiff = Double.MAX_VALUE;
 
-        for (int i = 1; i < wcssValues.size(); i++) {
-            double diff = wcssValues.get(i - 1) - wcssValues.get(i);
+        for (int i = 1; i < wcssValues.size() - 1; i++) {
+            double diff = Math.abs(wcssValues.get(i) - wcssValues.get(i + 1)) /
+                    Math.abs(wcssValues.get(i - 1) - wcssValues.get(i));
             if (diff < minDiff) {
                 minDiff = diff;
-                optimalK = i + 1;
+                optimalK = i;
             }
         }
 
         return optimalK;
     }
 
-    private static double calculateWCSS(List<Point> data, List<Point> centroids, List<List<Point>> clusters) {
+    private static double calculateWCSS(List<Point> centroids, List<List<Point>> clusters) {
         double wcss = 0.0;
 
         for (int i = 0; i < centroids.size(); i++) {
