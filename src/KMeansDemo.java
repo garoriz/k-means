@@ -15,8 +15,8 @@ class Point {
 }
 
 class KMeans {
-    private List<Point> data;
-    private int k;
+    private final List<Point> data;
+    private final int k;
     private List<Point> centroids;
     private List<List<Point>> clusters;
 
@@ -98,7 +98,7 @@ class KMeans {
         return new Point(sumX / clusterSize, sumY / clusterSize);
     }
 
-    private boolean updateCentroids() {
+    private boolean notUpdateCentroids() {
         List<Point> newCentroids = new ArrayList<>(k);
         boolean hasChanged = false;
 
@@ -106,19 +106,19 @@ class KMeans {
             Point centroid = calculateCentroid(clusters.get(i));
             newCentroids.add(centroid);
 
-            if (!centroid.equals(centroids.get(i))) {
+            if (!(centroid.x == centroids.get(i).x && centroid.y == centroids.get(i).y)) {
                 hasChanged = true;
             }
         }
 
         centroids = newCentroids;
-        return hasChanged;
+        return !hasChanged;
     }
 
-    public List<Point> run(int maxIterations) {
+    public List<Point> runWithoutCreatingFrame(int maxIterations) {
         for (int iteration = 0; iteration < maxIterations; iteration++) {
             assignToClusters();
-            if (!updateCentroids()) {
+            if (notUpdateCentroids()) {
                 break;
             }
         }
@@ -126,15 +126,81 @@ class KMeans {
         return centroids;
     }
 
+    public void run(int maxIterations) {
+        createFirstFrame(data);
+        for (int iteration = 0; iteration < maxIterations; iteration++) {
+            assignToClusters();
+            createFrame(data, centroids, clusters);
+            if (notUpdateCentroids()) {
+                break;
+            }
+        }
+    }
+
+    private static void createFirstFrame(List<Point> data) {
+        // Создание графического окна для отрисовки исходных точек
+        JFrame frame = new JFrame("K-Means Clustering");
+        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        FirstPlot firstPlot = new FirstPlot(data);
+        frame.add(firstPlot);
+        frame.setSize(1000, 800);
+        frame.setVisible(true);
+        while (frame.isVisible()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void createFrame(List<Point> data, List<Point> centroids, List<List<Point>> clusters) {
+        // Создание графического окна для отрисовки кластеров
+        JFrame frame = new JFrame("K-Means Clustering");
+        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        ClusterPlot clusterPlot = new ClusterPlot(data, centroids, clusters);
+        frame.add(clusterPlot);
+        frame.setSize(1000, 800);
+        frame.setVisible(true);
+        while (frame.isVisible()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public List<List<Point>> getClusters() {
         return clusters;
     }
 }
 
+class FirstPlot extends JPanel {
+    private final List<Point> data;
+
+    FirstPlot(List<Point> data) {
+        this.data = data;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        // Отрисовка точек данных
+        for (Point point : data) {
+            int x = (int) (point.x * 500 + 250);
+            int y = (int) (point.y * 400 + 200);
+            g.setColor(Color.BLACK);
+            g.fillOval(x, y, 5, 5);
+        }
+    }
+}
+
 class ClusterPlot extends JPanel {
-    private List<Point> data;
-    private List<List<Point>> clusters;
-    private List<Point> centroids;
+    private final List<Point> data;
+    private final List<List<Point>> clusters;
+    private final List<Point> centroids;
 
     ClusterPlot(List<Point> data, List<Point> centroids, List<List<Point>> clusters) {
         this.data = data;
@@ -148,8 +214,8 @@ class ClusterPlot extends JPanel {
 
         // Отрисовка точек данных
         for (Point point : data) {
-            int x = (int) (point.x * getWidth());
-            int y = (int) (point.y * getHeight());
+            int x = (int) (point.x * 500 + 250);
+            int y = (int) (point.y * 400 + 200);
             g.setColor(Color.BLACK);
             g.fillOval(x, y, 5, 5);
         }
@@ -162,14 +228,14 @@ class ClusterPlot extends JPanel {
             g.setColor(Color.decode(colors[i % colors.length]));
 
             for (Point point : cluster) {
-                int x = (int) (point.x * getWidth());
-                int y = (int) (point.y * getHeight());
+                int x = (int) (point.x * 500 + 250);
+                int y = (int) (point.y * 400 + 200);
                 g.fillOval(x, y, 5, 5);
             }
 
             g.setColor(Color.BLACK);
-            int x = (int) (centroid.x * getWidth());
-            int y = (int) (centroid.y * getHeight());
+            int x = (int) (centroid.x * 500 + 250);
+            int y = (int) (centroid.y * 400 + 200);
             g.fillOval(x - 10, y - 10, 20, 20);
         }
     }
@@ -194,16 +260,7 @@ public class KMeansDemo {
 
         // Выполнение кластеризации с оптимальным количеством кластеров
         KMeans kMeans = new KMeans(data, optimalK);
-        List<Point> centroids = kMeans.run(100);
-        List<List<Point>> clusters = kMeans.getClusters();
-
-        // Создание графического окна для отрисовки кластеров
-        JFrame frame = new JFrame("K-Means Clustering");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        ClusterPlot clusterPlot = new ClusterPlot(data, centroids, clusters);
-        frame.add(clusterPlot);
-        frame.setSize(800, 600);
-        frame.setVisible(true);
+        kMeans.run(100);
     }
 
     private static int findOptimalK(List<Point> data, int maxK) {
@@ -211,7 +268,7 @@ public class KMeansDemo {
 
         for (int k = 1; k <= maxK; k++) {
             KMeans kMeans = new KMeans(data, k);
-            List<Point> centroids = kMeans.run(100);
+            List<Point> centroids = kMeans.runWithoutCreatingFrame(100);
             List<List<Point>> clusters = kMeans.getClusters();
             double wcss = calculateWCSS(centroids, clusters);
             wcssValues.add(wcss);
