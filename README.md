@@ -5,10 +5,10 @@
 
 Визуализация с помощью Swing
 
-![1](https://drive.google.com/file/d/1D3yf3v9BHTDCaCEm8VxhlbIzz5YvQ5jg/view?usp=sharing)
+![1](https://github.com/garoriz/k-means/blob/master/src/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202023-10-02%20182237.png)
 
 
-![2](https://drive.google.com/file/d/13dJedrDhzLL2yWTp6zO2TuLaxLaPcUP-/view?usp=sharing)
+![2](https://github.com/garoriz/k-means/blob/master/src/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202023-10-02%20182251.png)
 
 
-![1](https://drive.google.com/file/d/1jURUmc7XpaexxWycS5jfX0ib2jJREGn7/view?usp=sharing)
+![3](https://github.com/garoriz/k-means/blob/master/src/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202023-10-02%20182301.png)
